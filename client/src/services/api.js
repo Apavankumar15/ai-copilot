@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE || inferApiBase();
 const WS_BASE = API_BASE.replace(/^http/, "ws");
 
 export async function uploadResume(sessionId, file) {
@@ -42,4 +42,14 @@ async function parseResponse(response) {
     throw new Error(data.error || "Request failed");
   }
   return data;
+}
+
+function inferApiBase() {
+  const { protocol, hostname } = window.location;
+
+  if (hostname.endsWith(".app.github.dev")) {
+    return `${protocol}//${hostname.replace("-5173.", "-4000.")}`;
+  }
+
+  return "http://localhost:4000";
 }

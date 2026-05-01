@@ -19,7 +19,7 @@ const upload = multer({
 const port = Number(process.env.PORT || 4000);
 const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
-app.use(cors({ origin: clientOrigin }));
+app.use(cors({ origin: isAllowedOrigin }));
 app.use(express.json({ limit: "1mb" }));
 
 const wss = new WebSocketServer({ server });
@@ -101,6 +101,26 @@ function broadcast(sessionId, payload) {
   const message = JSON.stringify(payload);
   for (const socket of sockets) {
     if (socket.readyState === WebSocket.OPEN) socket.send(message);
+  }
+}
+
+function isAllowedOrigin(origin, callback) {
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+
+  const allowedOrigins = new Set([
+    clientOrigin,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+  ]);
+
+  try {
+    const { hostname } = new URL(origin);
+    callback(null, allowedOrigins.has(origin) || hostname.endsWith(".app.github.dev"));
+  } catch {
+    callback(null, false);
   }
 }
 
